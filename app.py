@@ -6,7 +6,6 @@ import re
 import spacy
 from collections import Counter
 from nltk.corpus import stopwords
-from nltk.tokenize import sent_tokenize
 from rake_nltk import Rake
 from textblob import TextBlob
 import plotly.express as px
@@ -14,6 +13,9 @@ import plotly.graph_objects as go
 import io
 import networkx as nx
 import numpy as np
+import nltk
+
+nltk.download('punkt')
 
 # Configurar autenticación simple
 USER = "daniel"
@@ -47,6 +49,7 @@ st.subheader("📄 Discurso cargado")
 st.text_area("Contenido", texto[:3000] + "...", height=300)
 
 # KPIs básicos
+from nltk.tokenize import sent_tokenize
 palabras = re.findall(r'\b\w+\b', texto)
 oraciones = sent_tokenize(texto)
 st.subheader("📌 Indicadores Generales del Discurso")
