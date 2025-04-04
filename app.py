@@ -118,3 +118,30 @@ fig_sent.update_layout(height=300)
 st.plotly_chart(fig_sent, use_container_width=True)
 st.metric("Subjetividad", f"{subjetividad:.2f}", help="Valores cercanos a 1 indican alta carga emocional u opinativa")
 st.markdown(f"**🧠 Interpretación:** {interpretacion}")
+
+# Top 5 oraciones más positivas
+st.subheader("🟩 Top 5 Oraciones con Sentimiento Positivo")
+scored_sentences = [(oracion, TextBlob(oracion).sentiment.polarity) for oracion in oraciones if len(oracion.split()) > 4]
+sorted_positive = sorted(scored_sentences, key=lambda x: x[1], reverse=True)
+top_positivas = [s for s in sorted_positive if s[1] > 0][:5]
+
+texto_positivas = ""
+for i, (frase, score) in enumerate(top_positivas, 1):
+    st.markdown(f"**{i}.** *{frase.strip()}* (`{score:.2f}`)")
+    texto_positivas += f"{i}. {frase.strip()} ({score:.2f})\n"
+
+st.download_button("📥 Descargar oraciones positivas", data=texto_positivas, file_name="oraciones_positivas.txt", mime="text/plain")
+
+# Resumen automático alternativo simple (basado en frecuencia)
+st.subheader("📝 Resumen automático del discurso")
+st.markdown("Utilizamos una técnica basada en frecuencia para extraer oraciones representativas del contenido.")
+
+frecuencia = Counter(palabras_filtradas)
+sentencias_con_puntaje = []
+for oracion in oraciones:
+    puntaje = sum(frecuencia.get(p.lower(), 0) for p in re.findall(r'\b\w+\b', oracion))
+    sentencias_con_puntaje.append((oracion, puntaje))
+
+resumen_top = sorted(sentencias_con_puntaje, key=lambda x: x[1], reverse=True)[:5]
+for i, (oracion, puntaje) in enumerate(resumen_top, 1):
+    st.markdown(f"**{i}.** {oracion.strip()}")
