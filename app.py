@@ -16,6 +16,7 @@ import numpy as np
 import nltk
 
 nltk.download('punkt')
+nltk.download('stopwords')
 
 # Configurar autenticación simple
 USER = "daniel"
@@ -113,68 +114,3 @@ fig_sent.update_layout(height=300)
 st.plotly_chart(fig_sent, use_container_width=True)
 st.metric("Subjetividad", f"{subjetividad:.2f}", help="Valores cercanos a 1 indican alta carga emocional u opinativa")
 st.markdown(f"**🧠 Interpretación:** {interpretacion}")
-
-# Solo oraciones positivas
-st.subheader("🟩 Top 5 Oraciones Más Positivas")
-scored_sentences = [(frase.strip(), TextBlob(frase).sentiment.polarity) for frase in oraciones if len(frase.split()) > 4]
-sorted_by_polarity = sorted(scored_sentences, key=lambda x: x[1])
-positivas = sorted_by_polarity[-5:][::-1]
-
-for frase, score in positivas:
-    st.markdown(f"- *{frase}* (`{score:.2f}`)")
-
-# Palabras clave con RAKE (frases con impacto)
-st.subheader("💥 Frases más impactantes del discurso")
-st.markdown("Estas frases han sido extraídas automáticamente por su relevancia e impacto en el texto. Ayudan a entender los mensajes más destacados y repetidos.")
-r = Rake(language='spanish')
-r.extract_keywords_from_text(texto)
-keywords = r.get_ranked_phrases_with_scores()[:20]
-df_keywords = pd.DataFrame(keywords, columns=["Impacto", "Frase clave"])
-st.dataframe(df_keywords)
-
-# Red semántica con Plotly
-st.subheader("🔗 Red Semántica de Conceptos Clave")
-st.markdown("Una red semántica muestra la relación entre palabras que aparecen juntas frecuentemente en el discurso. Es útil para visualizar los temas más conectados entre sí.")
-
-pairs = list(zip(palabras_filtradas[:-1], palabras_filtradas[1:]))
-coocurrencias = Counter(pairs)
-top_pairs = coocurrencias.most_common(30)
-
-nodes = list(set([p for pair in top_pairs for p in pair]))
-edges = [(a, b, w) for (a, b), w in top_pairs if a in nodes and b in nodes]
-
-edge_x = []
-edge_y = []
-x_vals = {}
-y_vals = {}
-
-theta = np.linspace(0, 2*np.pi, len(nodes))
-radius = 1
-for i, node in enumerate(nodes):
-    x_vals[node] = radius * np.cos(theta[i])
-    y_vals[node] = radius * np.sin(theta[i])
-
-edge_traces = []
-for a, b, w in edges:
-    edge_traces.append(go.Scatter(x=[x_vals[a], x_vals[b]], y=[y_vals[a], y_vals[b]],
-                                   line=dict(width=w/5, color='gray'), mode='lines'))
-
-node_trace = go.Scatter(
-    x=[x_vals[n] for n in nodes],
-    y=[y_vals[n] for n in nodes],
-    mode='markers+text',
-    text=nodes,
-    textposition="top center",
-    marker=dict(size=10, color='skyblue')
-)
-
-fig_net = go.Figure(data=edge_traces + [node_trace])
-fig_net.update_layout(showlegend=False, title="Red Semántica (Plotly)",
-                      margin=dict(l=20, r=20, t=40, b=20), height=600)
-st.plotly_chart(fig_net, use_container_width=True)
-
-# Descarga del análisis como CSV
-st.markdown("---")
-output_csv = df_keywords.to_csv(index=False).encode('utf-8')
-st.download_button("📥 Descargar frases clave como CSV", data=output_csv, file_name="frases_clave.csv", mime="text/csv")
-
