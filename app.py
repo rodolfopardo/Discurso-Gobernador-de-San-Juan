@@ -16,7 +16,11 @@ import numpy as np
 import nltk
 
 nltk.download('punkt')
-nltk.download('stopwords')
+try:
+    stop_words = set(stopwords.words('spanish'))
+except LookupError:
+    nltk.download('stopwords')
+    stop_words = set(stopwords.words('spanish'))
 
 # Configurar autenticación simple
 USER = "daniel"
@@ -59,7 +63,7 @@ kpi1.metric("📝 Cantidad de Palabras", f"{len(palabras):,}")
 kpi2.metric("🔠 Cantidad de Oraciones", f"{len(oraciones):,}")
 
 # Limpieza y tokenización
-stop_words = set(stopwords.words('spanish')).union({"sanjuan", "juan", "san"})
+stop_words = stop_words.union({"sanjuan", "juan", "san"})
 palabras_filtradas = [p.lower() for p in palabras if p.lower() not in stop_words and len(p) > 3]
 
 # WordCloud interactivo como imagen descargable
